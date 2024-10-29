@@ -17,7 +17,9 @@ const generateAccessAndRefreshTokens = async(userId) => {
         return {accessToken, refreshToken}
 
     } catch (error) {
-        throw new ApiError(500,"Something went wrong while gererating refresh and access token")
+        console.log(error);
+        throw new ApiError(500,"Something went wrong while gererating refresh and access token");
+        
     }
 } 
 
@@ -98,9 +100,11 @@ const registerUser = asyncHandler( async (req,res) =>{
 const loginUser = asyncHandler( async (req,res) =>{
     // req body  -> data
     const {email, username , password} =req.body
+    console.log(email);
+    console.log(password);
 
     // username or email
-    if(!username || !email){
+    if(!username && !email){
         throw new ApiError(400, "username or email is required")
     }
 
@@ -124,7 +128,7 @@ const loginUser = asyncHandler( async (req,res) =>{
     // access and refresh token 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
-    const loggedInUser =  User.findById(user._id).select("-password -refreshToken")
+    const loggedInUser =  await User.findById(user._id).select("-password -refreshToken")
 
     //  send cookie
     const options = {  // server modifiable
@@ -133,17 +137,18 @@ const loginUser = asyncHandler( async (req,res) =>{
     }
 
     // send respond 
+    
     return res
     .status(200)
-    .cookie("accessToken",accessToken, options)
-    .cookie("refreshToken",refreshToken, options)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
         new ApiResponse(
-            200,
+            200, 
             {
-                user:loggedInUser, accessToken, refreshToken
+                user: loggedInUser, accessToken, refreshToken
             },
-            "user logged In Successfuly"
+            "User logged In Successfully"
         )
     )
 })
@@ -169,8 +174,8 @@ const logOutUser = asyncHandler( async (req,res) =>{
 
     return res
     .status(200)
-    .clearCookie("accessToken")
-    .clearCookie("refreshToken")
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200,{},"User logged Out"))
     
 })
